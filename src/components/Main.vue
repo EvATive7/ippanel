@@ -42,16 +42,16 @@ import axios from 'axios'
 export default {
   data() {
     return {
-      debug: true,
+      debug: false,
       current: {
         ipv6: {
-          location: '正在加载',
-          address: '正在加载',
+          location: 'Loading',
+          address: 'Loading',
           icon: 'mdi-numeric-6-circle'
         },
         ipv4: {
-          location: '正在加载',
-          address: '正在加载',
+          location: 'Loading',
+          address: 'Loading',
           icon: 'mdi-numeric-4-circle'
         }
       }
@@ -74,16 +74,15 @@ export default {
       ]
       for (const u of update) {
         if (this.debug) {
-          console.log(u.type.location);
-          u.type.location = 'testTesttestTesttestTesttestTesttestTesttestTesttestTesttestTesttestTesttestTest'
-          u.type.address = 'testTesttestTesttestTesttestTesttestTesttestTesttestTesttestTesttestTesttestTest'
+          u.type.location = 'TestLocation'
+          u.type.address = 'TestIP'
         } else {
           axios.get(u.url).then(response => {
             u.type.location = response.data.data.location
             u.type.address = response.data.data.myip
           }).catch(error => {
-            u.type.location = '获取失败';
-            u.type.address = '获取失败';
+            u.type.location = 'Failed';
+            u.type.address = 'Failed';
           });
         }
 
@@ -104,3 +103,9 @@ export default {
 
 };
 </script>
+
+<style>
+* {
+  user-select: none;
+}
+</style>

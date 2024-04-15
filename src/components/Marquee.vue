@@ -12,80 +12,95 @@ export default {
     props: {
         speed: {
             type: Number,
-            default: 0.4 // 较慢的速度以提供平滑滚动
+            default: 1 // Slow speed to provide smooth scrolling
         },
         startDelay: {
             type: Number,
-            default: 3000 // 滚动开始前的延迟时间
+            default: 3000 // Delay time before scrolling starts
         },
         endDelay: {
             type: Number,
-            default: 3000 // 滚动结束后等待淡出的延迟时间
+            default: 3000 // Delay time for fading out after scrolling ends
         },
         fadeDuration: {
             type: Number,
-            default: 300 // 淡出和淡入效果的持续时间
+            default: 300 // Duration of fade-out and fade-in effects
         }
     },
     data() {
         return {
             offset: 0,
-            contentWidth: 0,
-            marqueeWidth: 0,
             animationFrame: null,
+
             fadingOut: false,
+            animating: false,
+
         };
     },
     computed: {
-        shouldScroll() {
-            return this.contentWidth > this.marqueeWidth; //TODO: redetect when resize
-        },
         contentStyle() {
             return {
-                transform: this.shouldScroll ? `translateX(-${this.offset}px)` : 'translateX(0px)'
-            };
+                transform: `translateX(-${this.offset}px)`
+            }
         }
+
+
     },
     mounted() {
-        this.updateWidths();
-        window.addEventListener('resize', this.updateWidths);
-        console.log(this.shouldScroll)
+        console.log(this.shouldScroll())
         this.startMarquee()
     },
     beforeDestroy() {
         cancelAnimationFrame(this.animationFrame);
-        window.removeEventListener('resize', this.updateWidths);
     },
     methods: {
-        updateWidths() {
-            this.contentWidth = this.$refs.marquee.querySelector('.marquee-content').clientWidth;
-            this.marqueeWidth = this.$refs.marquee.clientWidth;
+        contentWidth() {
+            return this.$refs.marquee.querySelector('.marquee-content').clientWidth
+        },
+        marqueeWidth() {
+            return this.$refs.marquee.clientWidth
+        },
+        shouldScroll() {
+            return this.contentWidth() > this.marqueeWidth();
+        },
+        endPosition() {
+            return this.contentWidth() - this.marqueeWidth();
         },
         startMarquee() {
-            const endPosition = this.contentWidth - this.marqueeWidth;
+            setTimeout(() => {
+                this.animating = true
+                const animate = () => {
+                    if (!this.shouldScroll()) {
+                        // No need to roll, no more rolling
+                        cancelAnimationFrame(this.animationFrame)
+                        this.animating = false
 
-            const animate = () => {
-                if (!this.shouldScroll || this.offset >= endPosition) {
-                    if (this.offset < endPosition) {
-                        this.offset = endPosition; // 确保内容末尾与容器右边对齐
+                        return
                     }
-                    cancelAnimationFrame(this.animationFrame);
-                    setTimeout(() => {
-                        this.fadingOut = true;
-                        setTimeout(() => {
-                            this.offset = 0;
-                            this.fadingOut = false;
-                            setTimeout(this.startMarquee, this.startDelay + this.fadeDuration); // 淡出后等待，然后重新开始
-                        }, this.fadeDuration);
-                    }, this.endDelay); // 滚动结束后等待指定时间再淡出
-                    return;
-                }
 
-                this.offset += this.speed;
-                this.animationFrame = requestAnimationFrame(animate);
-            };
-            console.log(this.startDelay);
-            setTimeout(animate, this.startDelay);
+                    if (this.endPosition() < this.offset) {
+                        //One scroll ends normally, reset needed
+                        cancelAnimationFrame(this.animationFrame)
+                        this.animating = false
+
+                        setTimeout(() => {
+                            this.fadingOut = true
+                            setTimeout(() => {
+                                this.offset = 0
+                                this.fadingOut = false
+                                setTimeout(() => {
+                                    this.startMarquee()
+                                }, this.fadeDuration);
+                            }, this.fadeDuration);
+                        }, this.endDelay);
+                        return
+                    }
+
+                    this.offset += this.speed;
+                    this.animationFrame = requestAnimationFrame(animate)
+                };
+                animate()
+            }, this.startDelay);
         },
     },
 };

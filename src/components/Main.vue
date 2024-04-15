@@ -62,31 +62,46 @@ export default {
   },
   methods: {
     updateIp() {
-      var update = [
-        {
-          type: this.current.ipv4,
-          url: 'https://v4.ip.zxinc.org/info.php?type=json'
-        },
-        {
-          type: this.current.ipv6,
-          url: 'https://v6.ip.zxinc.org/info.php?type=json'
-        }
-      ]
-      for (const u of update) {
-        if (this.debug) {
-          u.type.location = 'TestLocation'
-          u.type.address = 'TestIP'
-        } else {
-          axios.get(u.url).then(response => {
-            u.type.location = response.data.data.location
-            u.type.address = response.data.data.myip
-          }).catch(error => {
-            u.type.location = 'Failed';
-            u.type.address = 'Failed';
-          });
-        }
-
+      const failed = (info) => {
+        info.location = 'Failed';
+        info.address = 'Failed';
       }
+
+      const axiosConfig = {
+        headers: {
+          //'Origin': 'http://ip.zxinc.org',
+          //'Referer': 'http://ip.zxinc.org/'
+        }
+      }
+
+      //v4
+      const v4info = this.current.ipv4
+      if (this.debug) {
+        v4info.location = '中国 北京市 北京市'
+        v4info.address = '39.156.66.10'
+      } else {
+        axios.get(`https://update.cz88.net/api/cz88/ip/base?ip=`, axiosConfig).then(response => {
+          v4info.location = response.data.data['actionAddress'][0]
+          v4info.address = response.data.data.ip
+        }).catch(error => {
+          failed(v4info)
+        });
+      }
+
+      //v6
+      const v6info = this.current.ipv6
+      if (this.debug) {
+        v6info.location = '中国 北京市 北京市'
+        v6info.address = '2400:da00:2::29'
+      } else {
+        axios.get('https://v6.ip.zxinc.org/info.php?type=json', axiosConfig).then(response => {
+          v6info.location = response.data.data.location
+          v6info.address = response.data.data.myip
+        }).catch(error => {
+          failed(v6info)
+        });
+      }
+
     },
     copy(info) {
       this.copyToClipboard(info.location + "\n" + info.address)

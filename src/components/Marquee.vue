@@ -35,6 +35,8 @@ export default {
             fadingOut: false,
             animating: false,
 
+            lastSlotContent: null
+
         };
     },
     computed: {
@@ -43,14 +45,19 @@ export default {
                 transform: `translateX(-${this.offset}px)`
             }
         }
-
-
     },
     mounted() {
-        this.startMarquee()
+        //this.startMarquee()
     },
     beforeDestroy() {
         cancelAnimationFrame(this.animationFrame);
+    },
+    updated() {
+        const newSlotContent = this.$slots.default()[0].children
+        if (newSlotContent != this.lastSlotContent) {
+            this.startMarquee()
+            this.lastSlotContent = newSlotContent
+        }
     },
     methods: {
         contentWidth() {

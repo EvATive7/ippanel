@@ -19,6 +19,7 @@ export default defineConfig({
     Components(),
     ViteFonts(),
   ],
+  base:"./",
   define: { 'process.env': {} },
   resolve: {
     alias: {
